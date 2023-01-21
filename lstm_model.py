@@ -77,10 +77,10 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
 
         model.eval()
         valid_loss_array = []
-        hidden_valid = None
+
         for _valid_X, _valid_Y in valid_loader:
             _valid_X, _valid_Y = _valid_X.to(device), _valid_Y.to(device)
-            pred_y, hidden_valid = model(_valid_X, hidden_valid)
+            pred_y = model(_valid_X)
             loss = criterion(pred_y, _valid_Y)
             valid_loss_array.append(loss.item())
 

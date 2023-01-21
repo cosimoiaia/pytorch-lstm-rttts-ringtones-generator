@@ -8,9 +8,9 @@ class Config:
     """
 
     input_size = 27 #len(feature_columns)
-    output_size = 128
+    output_size = 27
 
-    hidden_size = 128
+    hidden_size = 320
     lstm_layers = 3
     dropout_rate = 0.2
 
@@ -23,7 +23,7 @@ class Config:
     train_data_rate = 0.95
     valid_data_rate = 0.15
 
-    batch_size = 128
+    batch_size = 320
     learning_rate = 0.001
     epoch = 20
 

@@ -21,8 +21,8 @@ def string_to_semi_redundant_sequences(text: str, seq_maxlen=Config.input_size, 
         sequences.append(text[i: i + seq_maxlen])
         next_chars.append(text[i + seq_maxlen])
 
-    X = np.zeros((len(sequences), seq_maxlen, len_chars), dtype=np.bool)
-    Y = np.zeros((len(sequences), len_chars), dtype=np.bool)
+    X = np.zeros((len(sequences), seq_maxlen, len_chars), dtype=bool)
+    Y = np.zeros((len(sequences), len_chars), dtype=bool)
     for i, seq in enumerate(sequences):
         for t, char in enumerate(seq):
             X[i, t, char_idx[char]] = 1
