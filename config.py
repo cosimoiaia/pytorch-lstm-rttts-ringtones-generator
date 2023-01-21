@@ -38,7 +38,6 @@ class Config:
     train_data_path = "./data/ringtones_cleaned.txt"
     model_save_path = "./checkpoint/"
     log_save_path = "./log/"
-    do_log_print_to_screen = True
 
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)

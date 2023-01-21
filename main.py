@@ -7,5 +7,5 @@ import logging
 if __name__ == "__main__":
     config = Config()
     data = Data(config)
-    model = do_train(config, logging.getLogger(), data.get_train_and_valid_data())
+    model = do_train(config, data.get_train_and_valid_data())
 

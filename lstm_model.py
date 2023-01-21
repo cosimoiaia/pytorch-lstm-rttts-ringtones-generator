@@ -8,6 +8,8 @@ import numpy as np
 
 from config import Config
 
+logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
+
 
 class LSTM_Model(Module):
     """
@@ -30,12 +32,12 @@ class LSTM_Model(Module):
         return linear_out
 
 
-def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.array]):
+def do_train(config: Config, train_and_valid_data: [np.array]):
     """
     Perform the training of the model and saves it.
 
     :param config: config class containing parameters
-    :param logger: global logger
+    :param logging: global logging
     :param train_and_valid_data: training and validation set
     :return: The trained model
     """
@@ -60,10 +62,10 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
     bad_epoch = 0
     global_step = 0
     for epoch in range(config.epoch):
-        logger.info("Epoch {}/{}".format(epoch, config.epoch))
+        print("Epoch {}/{}".format(epoch, config.epoch))
         model.train()
         train_loss_array = []
-        hidden_train = None
+
         for i, _data in enumerate(train_loader):
             _train_X, _train_Y = _data[0].to(device), _data[1].to(device)
             optimizer.zero_grad()
@@ -86,8 +88,8 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
 
         train_loss_cur = np.mean(train_loss_array)
         valid_loss_cur = np.mean(valid_loss_array)
-        logger.info("The train loss is {:.6f}. ".format(train_loss_cur) +
-                    "The valid loss is {:.6f}.".format(valid_loss_cur))
+        print("The train loss is {:.6f}. ".format(train_loss_cur) +
+                     "The valid loss is {:.6f}.".format(valid_loss_cur))
 
         if valid_loss_cur < valid_loss_min:
             bad_epoch = 0
@@ -95,10 +97,10 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
         else:
             bad_epoch += 1
             if bad_epoch >= 5:
-                logger.info(" The training stops early in epoch {}".format(epoch))
+                print(" The training stops early in epoch {}".format(epoch))
                 break
 
-        return model
+    return model
 
 
 def predict(config: Config, data: np.array):

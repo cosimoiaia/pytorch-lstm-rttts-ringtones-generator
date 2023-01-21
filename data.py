@@ -51,8 +51,8 @@ class Data:
 
     def get_train_and_valid_data(self):
         train_x, valid_x, train_y, valid_y = train_test_split(self.X, self.Y,
-                                                              test_size=self.config.valid_data_rate)
-                                                              #random_state=self.config.random_seed,
-                                                              #shuffle=self.config.shuffle_train_data)
+                                                              test_size=self.config.valid_data_rate,
+                                                              random_state=self.config.random_seed,
+                                                              shuffle=self.config.shuffle_train_data)
         #return [train_x, valid_x, train_y, valid_y]
         return [self.X, self.Y, self.X, self.Y]
