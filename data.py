@@ -40,19 +40,14 @@ def string_to_semi_redundant_sequences(text: str, seq_maxlen=Config.input_size, 
 class Data:
     def __init__(self, config: Config):
         self.config = config
-        self.raw_data, self.X, self.Y, self.char_idx = self.read_data()
+        self.X, self.Y, self.char_idx = self.read_data()
 
     def read_data(self):
         with open(self.config.train_data_path, 'r') as fd:
             init_data = fd.readline()
-            X, Y, char_idx = string_to_semi_redundant_sequences(init_data)
+            self.X, self.Y, self.char_idx = string_to_semi_redundant_sequences(init_data)
 
-        return init_data, X, Y, char_idx
+        return self.X, self.Y, self.char_idx
 
     def get_train_and_valid_data(self):
-        train_x, valid_x, train_y, valid_y = train_test_split(self.X, self.Y,
-                                                              test_size=self.config.valid_data_rate,
-                                                              random_state=self.config.random_seed,
-                                                              shuffle=self.config.shuffle_train_data)
-        #return [train_x, valid_x, train_y, valid_y]
-        return [self.X, self.Y, self.X, self.Y]
+        return self.X, self.Y

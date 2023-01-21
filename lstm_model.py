@@ -2,7 +2,7 @@ import logging
 
 import torch
 from torch.nn import Module, LSTM, Linear
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, random_split
 from torch.autograd import Variable
 import numpy as np
 
@@ -42,14 +42,17 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
     :return: The trained model
     """
 
-    train_x, train_y, valid_x, valid_y = train_and_valid_data
-    train_x, train_y = torch.tensor(train_x, dtype=torch.float), torch.tensor(train_y, dtype=torch.float)
+    X, Y = train_and_valid_data
+    dataset = TensorDataset(torch.tensor(X, dtype=torch.float), torch.tensor(Y, dtype=torch.float))
+    train_size = int(config.train_data_rate * len(dataset))
+    test_size = len(dataset) - train_size
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+
     train_loader = DataLoader(
-        TensorDataset(train_x, train_y),
+        train_dataset,
         batch_size=config.batch_size)  # DataLoader
 
-    valid_x, valid_y = torch.tensor(valid_x, dtype=torch.float), torch.tensor(valid_y, dtype=torch.float)
-    valid_loader = DataLoader(TensorDataset(valid_x, valid_y), batch_size=config.batch_size)
+    valid_loader = DataLoader(test_dataset, batch_size=config.batch_size)
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
     model = LSTM_Model(config).to(device)
@@ -69,7 +72,7 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
         for i, _data in enumerate(train_loader):
             _train_X, _train_Y = _data[0].to(device), _data[1].to(device)
             optimizer.zero_grad()
-            pred_y = model(train_x)
+            pred_y = model(_train_X)
 
             loss = criterion(pred_y, _train_Y)
             loss.backward()
@@ -110,7 +113,7 @@ def predict(config: Config, data: np.array):
     :param data: input data to perform predictions on
     :return: numpy array of predictions
     """
-    data = torch.from_numpy(data).float()
+    data = torch.tensor(data, dtype=torch.float)
     test_set = TensorDataset(data)
     test_loader = DataLoader(test_set, batch_size=1)
 

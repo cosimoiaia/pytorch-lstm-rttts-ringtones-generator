@@ -10,8 +10,8 @@ class Config:
     input_size = 27 #len(feature_columns)
     output_size = 27
 
-    hidden_size = 320
-    lstm_layers = 3
+    hidden_size = 128
+    lstm_layers = 8
     dropout_rate = 0.2
 
     do_train = True
@@ -20,12 +20,12 @@ class Config:
     shuffle_train_data = False
     use_cuda = True
 
-    train_data_rate = 0.95
+    train_data_rate = 0.85
     valid_data_rate = 0.15
 
     batch_size = 320
     learning_rate = 0.001
-    epoch = 20
+    epoch = 64
 
     random_seed = 42
 
