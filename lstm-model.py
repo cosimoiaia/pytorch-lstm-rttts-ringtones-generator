@@ -1,7 +1,11 @@
+import logging
+
 import torch
 from torch.nn import Module, LSTM, Linear
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
+
+from config import Config
 
 
 class LSTM_Model(Module):
@@ -9,7 +13,7 @@ class LSTM_Model(Module):
     Basic wrapper for the pytorch implementation of LSTM
     """
 
-    def __init__(self, config):
+    def __init__(self, config: Config):
         super(LSTM_Model, self).__init__()
         self.lstm = LSTM(input_size=config.input_size, hidden_size=config.hidden_size,
                          num_layers=config.lstm_layers, batch_first=True, dropout=config.dropout_rate)
@@ -21,7 +25,7 @@ class LSTM_Model(Module):
         return linear_out, hidden
 
 
-def do_train(config, logger, train_and_valid_data: [np.array]):
+def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.array]):
     """
     Perform the training of the model and saves it.
 
@@ -98,7 +102,7 @@ def do_train(config, logger, train_and_valid_data: [np.array]):
         return model
 
 
-def predict(config, data: np.array):
+def predict(config: Config, data: np.array):
     """
     Return predictions on input data from the trained model
     :param config:
