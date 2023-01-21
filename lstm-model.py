@@ -62,12 +62,9 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
             optimizer.zero_grad()
             pred_y, hidden_train = model(_train_X, hidden_train)
 
-            if not config.do_continue_train:
-                hidden_train = None
-            else:
-                h_0, c_0 = hidden_train
-                h_0.detach_(), c_0.detach_()
-                hidden_train = (h_0, c_0)
+            h_0, c_0 = hidden_train
+            h_0.detach_(), c_0.detach_()
+            hidden_train = (h_0, c_0)
             loss = criterion(pred_y, _train_Y)
             loss.backward()
             optimizer.step()
@@ -80,8 +77,6 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
         for _valid_X, _valid_Y in valid_loader:
             _valid_X, _valid_Y = _valid_X.to(device), _valid_Y.to(device)
             pred_y, hidden_valid = model(_valid_X, hidden_valid)
-            if not config.do_continue_train:
-                hidden_valid = None
             loss = criterion(pred_y, _valid_Y)
             valid_loss_array.append(loss.item())
 
