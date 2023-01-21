@@ -6,27 +6,24 @@ class Config:
     """
     Basic class for configurations
     """
-    feature_columns = list(range(2, 9))
-    label_columns = [4, 5]
 
-    input_size = len(feature_columns)
-    output_size = len(label_columns)
+    input_size = 27 #len(feature_columns)
+    output_size = 128
 
     hidden_size = 128
-    lstm_layers = 2
+    lstm_layers = 3
     dropout_rate = 0.2
-    time_step = 20
 
     do_train = True
     do_predict = True
-    add_train = True
-    shuffle_train_data = True
+    add_train = False
+    shuffle_train_data = False
     use_cuda = True
 
     train_data_rate = 0.95
     valid_data_rate = 0.15
 
-    batch_size = 64
+    batch_size = 128
     learning_rate = 0.001
     epoch = 20
 
@@ -38,7 +35,7 @@ class Config:
     name = "pytorch_rttts_lstm"
     model_name = "model_" + name + ".pth"
 
-    train_data_path = "./data/ringtones_clean.txt"
+    train_data_path = "./data/ringtones_cleaned.txt"
     model_save_path = "./checkpoint/"
     log_save_path = "./log/"
     do_log_print_to_screen = True

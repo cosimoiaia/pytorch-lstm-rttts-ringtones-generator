@@ -3,6 +3,7 @@ import logging
 import torch
 from torch.nn import Module, LSTM, Linear
 from torch.utils.data import DataLoader, TensorDataset
+from torch.autograd import Variable
 import numpy as np
 
 from config import Config
@@ -15,14 +16,18 @@ class LSTM_Model(Module):
 
     def __init__(self, config: Config):
         super(LSTM_Model, self).__init__()
+        self.config = config
         self.lstm = LSTM(input_size=config.input_size, hidden_size=config.hidden_size,
                          num_layers=config.lstm_layers, batch_first=True, dropout=config.dropout_rate)
         self.linear = Linear(in_features=config.hidden_size, out_features=config.output_size)
 
-    def forward(self, x, hidden=None):
-        lstm_out, hidden = self.lstm(x, hidden)
-        linear_out = self.linear(lstm_out)
-        return linear_out, hidden
+    def forward(self, x):
+        inputs = x.cuda()
+        h_0 = Variable(torch.zeros(self.config.lstm_layers, x.size(0), self.config.hidden_size).cuda())
+        c_0 = Variable(torch.zeros(self.config.lstm_layers, x.size(0), self.config.hidden_size).cuda())
+        lstm_out, (h, c) = self.lstm(inputs, (h_0.detach(), c_0.detach()))
+        linear_out = self.linear(lstm_out[:, -1, :])
+        return linear_out
 
 
 def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.array]):
@@ -37,9 +42,11 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
 
     train_x, train_y, valid_x, valid_y = train_and_valid_data
     train_x, train_y = torch.from_numpy(train_x).float(), torch.from_numpy(train_y).float()  # Tensor
-    train_loader = DataLoader(TensorDataset(train_x, train_y), batch_size=config.batch_size)  # DataLoader
+    train_loader = DataLoader(
+        TensorDataset(train_x, train_y),
+        batch_size=config.batch_size)  # DataLoader
 
-    valid_x, valid_y = torch.from_numpy(valid_x).float(), torch.from_numpy(valid_y).float()
+    valid_x, valid_y = torch.from_numpy(valid_x), torch.from_numpy(valid_y)
     valid_loader = DataLoader(TensorDataset(valid_x, valid_y), batch_size=config.batch_size)
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
@@ -60,11 +67,8 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
         for i, _data in enumerate(train_loader):
             _train_X, _train_Y = _data[0].to(device), _data[1].to(device)
             optimizer.zero_grad()
-            pred_y, hidden_train = model(_train_X, hidden_train)
+            pred_y = model(train_x)
 
-            h_0, c_0 = hidden_train
-            h_0.detach_(), c_0.detach_()
-            hidden_train = (h_0, c_0)
             loss = criterion(pred_y, _train_Y)
             loss.backward()
             optimizer.step()
@@ -90,7 +94,7 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
             torch.save(model.state_dict(), config.model_save_path + config.model_name)
         else:
             bad_epoch += 1
-            if bad_epoch >= config.patience:
+            if bad_epoch >= 5:
                 logger.info(" The training stops early in epoch {}".format(epoch))
                 break
 
