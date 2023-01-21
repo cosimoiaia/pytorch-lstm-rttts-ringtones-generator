@@ -41,12 +41,12 @@ def do_train(config: Config, logger: logging.Logger, train_and_valid_data: [np.a
     """
 
     train_x, train_y, valid_x, valid_y = train_and_valid_data
-    train_x, train_y = torch.from_numpy(train_x).float(), torch.from_numpy(train_y).float()  # Tensor
+    train_x, train_y = torch.tensor(train_x, dtype=torch.float), torch.tensor(train_y, dtype=torch.float)
     train_loader = DataLoader(
         TensorDataset(train_x, train_y),
         batch_size=config.batch_size)  # DataLoader
 
-    valid_x, valid_y = torch.from_numpy(valid_x), torch.from_numpy(valid_y)
+    valid_x, valid_y = torch.tensor(valid_x, dtype=torch.float), torch.tensor(valid_y, dtype=torch.float)
     valid_loader = DataLoader(TensorDataset(valid_x, valid_y), batch_size=config.batch_size)
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
