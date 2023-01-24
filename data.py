@@ -5,49 +5,47 @@ from sklearn.model_selection import train_test_split
 from config import Config
 
 
-def string_to_semi_redundant_sequences(text: str, seq_maxlen=Config.input_size, redun_step=1, char_idx=None):
-    print("Vectorizing text...")
-
-    chars = sorted(list(set(text)))
-
-    if char_idx is None:
-        char_idx = {c: i for i, c in enumerate(sorted(chars))}
-        idx_char = {i: c for i, c in enumerate(sorted(chars))}
-
-    len_chars = len(char_idx)
-
-    sequences = []
-    next_chars = []
-    for i in range(0, len(text) - seq_maxlen, redun_step):
-        sequences.append(text[i: i + seq_maxlen])
-        next_chars.append(text[i + seq_maxlen])
-
-    X = np.zeros((len(sequences), seq_maxlen, len_chars), dtype=np.bool)
-    Y = np.zeros((len(sequences), len_chars), dtype=np.bool)
-    for i, seq in enumerate(sequences):
-        for t, char in enumerate(seq):
-            X[i, t, char_idx[char]] = 1
-        Y[i, char_idx[next_chars[i]]] = 1
-    #        print(".")
-
-    print("Text total length: {:,}".format(len(text)))
-    print("Distinct chars   : {:,}".format(len_chars))
-    print("Total sequences  : {:,}".format(len(sequences)))
-
-    return X, Y, char_idx
-
-
 class Data:
     def __init__(self, config: Config):
         self.config = config
-        self.X, self.Y, self.char_idx = self.read_data()
+        self.text = ""
+        self.X, self.Y = []
+        self.char_idx, self.idx_char = {}
+        self.read_data()
+
+    def encode_dataset(self):
+        print("Encoding dataset...")
+        vocab = sorted(list(set(self.text)))
+        self.char_idx = {c: i for i, c in enumerate(sorted(vocab))}
+        self.idx_char = {i: c for i, c in enumerate(sorted(vocab))}
+
+        sequences = []
+        targets = []
+
+        # The next character in a sequence is the target
+        for i in range(0, len(self.text) - self.config.input_size):
+            sequences.append(self.text[i: i + self.config.input_size])
+            targets.append(self.text[i + self.config.input_size])
+
+        self.X = [[self.char_idx[c] for c in seq] for seq in sequences]
+        self.Y = [[self.char_idx[c] for c in t] for t in targets]
+
+        print("Text total length: {:,}".format(len(self.text)))
+        print("Distinct chars   : {:,}".format(self.len_chars))
+        print("Total sequences  : {:,}".format(len(sequences)))
 
     def read_data(self):
         with open(self.config.train_data_path, 'r') as fd:
-            init_data = fd.readline()
-            self.X, self.Y, self.char_idx = string_to_semi_redundant_sequences(init_data)
+            self.text = fd.readline()
+            self.encode_dataset()
 
-        return self.X, self.Y, self.char_idx
+    def encode_text(self, input_string: str):
+        enc = [self.char_idx[c] for c in input_string]
+        return enc
+
+    def decode_text(self, encoded_string: []):
+        dec = [self.idx_char[c] for c in encoded_string]
+        return dec
 
     def get_train_and_valid_data(self):
         return self.X, self.Y
