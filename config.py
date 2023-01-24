@@ -10,10 +10,10 @@ class Config:
     input_size = 128
     output_size = 128
 
-    window_size = 27
+    window_size = 8
 
     hidden_size = 128
-    lstm_layers = 8
+    lstm_layers = 2
     dropout_rate = 0.2
 
     do_train = True
@@ -27,7 +27,9 @@ class Config:
 
     batch_size = 128
     learning_rate = 0.001
-    epoch = 64
+    epoch = 8
+
+    nhead = 2
 
     random_seed = 42
 
