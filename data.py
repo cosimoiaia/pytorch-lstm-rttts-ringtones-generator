@@ -24,10 +24,12 @@ class Data:
         sequences = []
         targets = []
 
-        # The next character in a sequence is the target
+        window = self.config.input_size
+
+        # Generate targets using a sliding windows on the input
         for i in range(0, len(self.text) - self.config.input_size):
-            sequences.append(self.text[i: i + self.config.input_size])
-            targets.append(self.text[i + self.config.input_size])
+            sequences.append(self.text[i: i + window])
+            targets.append(self.text[i + 1: i + window + 1])
 
         self.X = [[self.char_idx[c] for c in seq] for seq in sequences]
         self.Y = [[self.char_idx[c] for c in t] for t in targets]
