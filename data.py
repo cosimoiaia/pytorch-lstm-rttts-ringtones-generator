@@ -9,8 +9,10 @@ class Data:
     def __init__(self, config: Config):
         self.config = config
         self.text = ""
-        self.X, self.Y = []
-        self.char_idx, self.idx_char = {}
+        self.X = []
+        self.Y = []
+        self.char_idx = []
+        self.idx_char = []
         self.read_data()
 
     def encode_dataset(self):
@@ -31,7 +33,7 @@ class Data:
         self.Y = [[self.char_idx[c] for c in t] for t in targets]
 
         print("Text total length: {:,}".format(len(self.text)))
-        print("Distinct chars   : {:,}".format(self.len_chars))
+        print("Distinct chars   : {:,}".format(len(vocab)))
         print("Total sequences  : {:,}".format(len(sequences)))
 
     def read_data(self):
