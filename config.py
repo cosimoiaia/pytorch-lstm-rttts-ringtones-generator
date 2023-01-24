@@ -7,8 +7,10 @@ class Config:
     Basic class for configurations
     """
 
-    input_size = 27 #len(feature_columns)
-    output_size = 27
+    input_size = 128
+    output_size = 128
+
+    window_size = 27
 
     hidden_size = 128
     lstm_layers = 8
@@ -23,7 +25,7 @@ class Config:
     train_data_rate = 0.85
     valid_data_rate = 0.15
 
-    batch_size = 320
+    batch_size = 128
     learning_rate = 0.001
     epoch = 64
 

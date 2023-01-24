@@ -24,15 +24,15 @@ class LSTM_Model(Module):
         self.linear = Linear(in_features=config.hidden_size, out_features=config.output_size)
 
     def forward(self, x):
-        inputs = x.cuda()
-        h_0 = Variable(torch.zeros(self.config.lstm_layers, x.size(0), self.config.hidden_size).cuda())
-        c_0 = Variable(torch.zeros(self.config.lstm_layers, x.size(0), self.config.hidden_size).cuda())
+        inputs = x.view(1, 1, -1).cuda()
+        h_0 = Variable(torch.zeros(self.config.lstm_layers, inputs.size(0), self.config.hidden_size).cuda())
+        c_0 = Variable(torch.zeros(self.config.lstm_layers, inputs.size(0), self.config.hidden_size).cuda())
         lstm_out, (h, c) = self.lstm(inputs, (h_0.detach(), c_0.detach()))
-        linear_out = self.linear(lstm_out[:, -1, :])
+        linear_out = self.linear(lstm_out.view(-1))
         return linear_out
 
 
-def do_train(config: Config, train_and_valid_data: [np.array]):
+def do_train(config: Config, train_and_valid_data):
     """
     Perform the training of the model and saves it.
 
@@ -43,7 +43,7 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
     """
 
     X, Y = train_and_valid_data
-    dataset = TensorDataset(torch.tensor(X, dtype=torch.float), torch.tensor(Y, dtype=torch.float))
+    dataset = TensorDataset(torch.tensor(X, dtype=torch.float).view(-1), torch.tensor(Y, dtype=torch.float).view(-1))
     train_size = int(config.train_data_rate * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
@@ -92,7 +92,7 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
         train_loss_cur = np.mean(train_loss_array)
         valid_loss_cur = np.mean(valid_loss_array)
         print("The train loss is {:.6f}. ".format(train_loss_cur) +
-                     "The valid loss is {:.6f}.".format(valid_loss_cur))
+              "The valid loss is {:.6f}.".format(valid_loss_cur))
 
         if valid_loss_cur < valid_loss_min:
             bad_epoch = 0

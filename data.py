@@ -24,7 +24,7 @@ class Data:
         sequences = []
         targets = []
 
-        window = self.config.input_size
+        window = self.config.window_size
 
         # Generate targets using a sliding windows on the input
         for i in range(0, len(self.text) - self.config.input_size):
