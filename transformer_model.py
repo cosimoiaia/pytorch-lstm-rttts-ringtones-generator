@@ -37,6 +37,8 @@ model = RTTTLTransformer(vocab_size, config.hidden_size, vocab_size, config.nhea
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
+model = model
+
 input_data, output_data = data.get_train_and_valid_data()
 
 # train the model
