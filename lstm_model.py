@@ -63,8 +63,7 @@ def do_train(config: Config, train_and_valid_data):
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
     model = LSTM_Model(config, device).to(device)
-    if config.add_train:
-        model.load_state_dict(torch.load(config.model_save_path + config.model_name))
+
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -79,6 +78,7 @@ def do_train(config: Config, train_and_valid_data):
         for i, _data in enumerate(train_loader):
             _train_X, _train_Y = _data[0].to(device), _data[1].to(device)
             optimizer.zero_grad()
+            print(f"{_train_X.shape:}")
             pred_y = model(_train_X)
 
             loss = criterion(pred_y, _train_Y)
