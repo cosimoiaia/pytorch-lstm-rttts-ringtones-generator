@@ -1,7 +1,7 @@
 import logging
 
 import torch
-from torch.nn import Module, LSTM, Linear, Embedding
+from torch.nn import Module, LSTM, Linear
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from torch.autograd import Variable
 import numpy as np
@@ -16,29 +16,23 @@ class LSTM_Model(Module):
     Basic wrapper for the pytorch implementation of LSTM
     """
 
-    def __init__(self, config: Config, device):
+    def __init__(self, config: Config):
         super(LSTM_Model, self).__init__()
         self.config = config
-        self.device = device
-
-        self.hidden = (Variable(torch.zeros(self.config.lstm_layers,
-                                            self.config.batch_size, self.config.hidden_size)).to(device),
-                       Variable(torch.zeros(self.config.lstm_layers,
-                                            self.config.batch_size,self.config.hidden_size)).to(device))
-
-        self.embedding = Embedding(config.input_size, config.hidden_size)
-        self.lstm = LSTM(input_size=config.hidden_size, hidden_size=config.hidden_size,
+        self.lstm = LSTM(input_size=config.input_size, hidden_size=config.hidden_size,
                          num_layers=config.lstm_layers, batch_first=True, dropout=config.dropout_rate)
         self.linear = Linear(in_features=config.hidden_size, out_features=config.output_size)
 
     def forward(self, x):
-        inputs = self.embedding(x)
-        lstm_out, (h, c) = self.lstm(inputs, self.hidden)
-        linear_out = self.linear(lstm_out.view[:, -1, :])
+        inputs = x.cuda()
+        h_0 = Variable(torch.zeros(self.config.lstm_layers, x.size(0), self.config.hidden_size).cuda())
+        c_0 = Variable(torch.zeros(self.config.lstm_layers, x.size(0), self.config.hidden_size).cuda())
+        lstm_out, (h, c) = self.lstm(inputs, (h_0.detach(), c_0.detach()))
+        linear_out = self.linear(lstm_out[:, -1, :])
         return linear_out
 
 
-def do_train(config: Config, train_and_valid_data):
+def do_train(config: Config, train_and_valid_data: [np.array]):
     """
     Perform the training of the model and saves it.
 
@@ -49,8 +43,7 @@ def do_train(config: Config, train_and_valid_data):
     """
 
     X, Y = train_and_valid_data
-    dataset = TensorDataset(torch.tensor(X, dtype=torch.long),
-                            torch.tensor(Y, dtype=torch.long))
+    dataset = TensorDataset(torch.tensor(X, dtype=torch.float), torch.tensor(Y, dtype=torch.float))
     train_size = int(config.train_data_rate * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
@@ -62,23 +55,21 @@ def do_train(config: Config, train_and_valid_data):
     valid_loader = DataLoader(test_dataset, batch_size=config.batch_size)
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
-    model = LSTM_Model(config, device).to(device)
-
+    model = LSTM_Model(config).to(device)
+    if config.add_train:
+        model.load_state_dict(torch.load(config.model_save_path + config.model_name))
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.MSELoss()
 
-    valid_loss_min = float("inf")
-    bad_epoch = 0
     global_step = 0
-
     for epoch in range(config.epoch):
+        print("Epoch {}/{}".format(epoch, config.epoch))
         model.train()
         train_loss_array = []
 
         for i, _data in enumerate(train_loader):
             _train_X, _train_Y = _data[0].to(device), _data[1].to(device)
             optimizer.zero_grad()
-            print(f"{_train_X.shape:}")
             pred_y = model(_train_X)
 
             loss = criterion(pred_y, _train_Y)
@@ -96,21 +87,12 @@ def do_train(config: Config, train_and_valid_data):
             loss = criterion(pred_y, _valid_Y)
             valid_loss_array.append(loss.item())
 
-        valid_loss = sum(valid_loss_array) / len(valid_loss_array)
-        train_loss = sum(train_loss_array) / len(train_loss_array)
+        train_loss_cur = np.mean(train_loss_array)
+        valid_loss_cur = np.mean(valid_loss_array)
+        print("The train loss is {:.6f}. ".format(train_loss_cur) +
+              "The valid loss is {:.6f}.".format(valid_loss_cur))
 
-        print("The train loss is {:.6f}. ".format(train_loss) +
-              "The valid loss is {:.6f}.".format(valid_loss))
-
-        if valid_loss <= valid_loss_min:
-            bad_epoch = 0
-            valid_loss_min = valid_loss
-            torch.save(model.state_dict(), config.model_save_path + config.model_name)
-        else:
-            bad_epoch += 1
-            if bad_epoch >= 5:
-                print(" The training stops early in epoch {}".format(epoch))
-                break
+        torch.save(model.state_dict(), config.model_save_path + config.model_name)
 
     return model
 

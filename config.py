@@ -10,7 +10,7 @@ class Config:
     input_size = 49
     output_size = 49
 
-    hidden_size = 128
+    hidden_size = 64
     lstm_layers = 2
     dropout_rate = 0.2
 
@@ -23,9 +23,9 @@ class Config:
     train_data_rate = 0.85
     valid_data_rate = 0.15
 
-    batch_size = 64
+    batch_size = 32
     learning_rate = 0.001
-    epoch = 12
+    epoch = 64
 
     random_seed = 42
 
