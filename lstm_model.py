@@ -1,5 +1,5 @@
 import logging
-
+import os
 import torch
 from torch.nn import Module, LSTM, Linear
 from torch.utils.data import DataLoader, TensorDataset, random_split
@@ -48,16 +48,19 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=config.batch_size)  # DataLoader
-
+    train_loader = DataLoader(train_dataset, batch_size=config.batch_size)
     valid_loader = DataLoader(test_dataset, batch_size=config.batch_size)
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
     model = LSTM_Model(config).to(device)
+
     if config.add_train:
-        model.load_state_dict(torch.load(config.model_save_path + config.model_name))
+        filename = config.model_save_path + config.model_name
+        if os.path.isfile(filename):
+            model.load_state_dict(torch.load(config.model_save_path + config.model_name))
+        else:
+            print(f"{filename} not found. Training new model.")
+
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     criterion = torch.nn.MSELoss()
 
@@ -118,9 +121,9 @@ def predict(config: Config, data: np.array):
     hidden_predict = None
     for _data in test_loader:
         data_x = _data[0].to(device)
-        pred_x, hidden_predict = model(data_x, hidden_predict)
+        pred_x = model(data_x)
 
         cur_pred = torch.squeeze(pred_x, dim=0)
         result = torch.cat((result, cur_pred), dim=0)
 
-    return result.detach().cpu().numpy()
+    print(f"result: {result.detach().cpu().numpy()}")

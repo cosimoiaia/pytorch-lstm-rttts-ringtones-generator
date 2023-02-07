@@ -16,7 +16,7 @@ class Config:
 
     do_train = True
     do_predict = True
-    add_train = False
+    add_train = True
     shuffle_train_data = False
     use_cuda = True
 
@@ -25,7 +25,7 @@ class Config:
 
     batch_size = 32
     learning_rate = 0.001
-    epoch = 64
+    epoch = 8
 
     random_seed = 42
 

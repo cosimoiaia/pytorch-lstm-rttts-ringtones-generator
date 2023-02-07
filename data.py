@@ -41,12 +41,13 @@ class Data:
         print(f"Vocabulary length: {len_chars}")
         print(f"Vocabulary: {self.vocab}")
         print(f"Total sequences: {len(sequences)}")
-        print(f"{len(X):}, {len(Y):}")
 
         return X, Y, char_idx, idx_char
 
     def encode_text(self, input_string: str):
-        enc = [self.char_idx[c] for c in input_string]
+        enc = np.zeros((len(input_string), 1, len(self.vocab)), dtype=np.bool)
+        for i, char in enumerate(input_string):
+            enc[i, 0, self.char_idx[char]] = 1
         return enc
 
     def decode_text(self, encoded_string: []):
