@@ -30,12 +30,12 @@ class Data:
             sequences.append(self.raw_text[i: i + 1])
             next_chars.append(self.raw_text[i + 1])
 
-        X = np.zeros((len(sequences), 1, len_chars), dtype=np.bool)
-        Y = np.zeros((len(sequences), len_chars), dtype=np.bool)
+        X = np.zeros((len(sequences), 1, len_chars), dtype=np.float)
+        Y = np.zeros((len(sequences), len_chars), dtype=np.float)
         for i, seq in enumerate(sequences):
             for t, char in enumerate(seq):
-                X[i, t, char_idx[char]] = 1
-            Y[i, char_idx[next_chars[i]]] = 1
+                X[i, t, char_idx[char]] = 1.0
+            Y[i, char_idx[next_chars[i]]] = 1.0
 
         print(f"Text total length: {len(self.raw_text)}")
         print(f"Vocabulary length: {len_chars}")

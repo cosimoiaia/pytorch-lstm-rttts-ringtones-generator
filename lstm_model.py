@@ -4,7 +4,9 @@ import torch
 from torch.nn import Module, LSTM, Linear
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from torch.autograd import Variable
+from torch.nn.functional import log_softmax
 import numpy as np
+from tqdm import tqdm
 
 from config import Config
 
@@ -63,14 +65,16 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
     criterion = torch.nn.MSELoss()
+    #criterion = torch.nn.CrossEntropyLoss()
 
     global_step = 0
     for epoch in range(config.epoch):
-        print("Epoch {}/{}".format(epoch, config.epoch))
         model.train()
         train_loss_array = []
 
-        for i, _data in enumerate(train_loader):
+        loader = tqdm(train_loader)
+        loader.set_description(f"Epoch [{epoch}/{config.epoch}]")
+        for i, _data in enumerate(loader):
             _train_X, _train_Y = _data[0].to(device), _data[1].to(device)
             optimizer.zero_grad()
             pred_y = model(_train_X)
@@ -80,20 +84,7 @@ def do_train(config: Config, train_and_valid_data: [np.array]):
             optimizer.step()
             train_loss_array.append(loss.item())
             global_step += 1
-
-        model.eval()
-        valid_loss_array = []
-
-        for _valid_X, _valid_Y in valid_loader:
-            _valid_X, _valid_Y = _valid_X.to(device), _valid_Y.to(device)
-            pred_y = model(_valid_X)
-            loss = criterion(pred_y, _valid_Y)
-            valid_loss_array.append(loss.item())
-
-        train_loss_cur = np.mean(train_loss_array)
-        valid_loss_cur = np.mean(valid_loss_array)
-        print("The train loss is {:.6f}. ".format(train_loss_cur) +
-              "The valid loss is {:.6f}.".format(valid_loss_cur))
+            loader.set_postfix(loss=loss.item())
 
         torch.save(model.state_dict(), config.model_save_path + config.model_name)
 
@@ -118,12 +109,15 @@ def predict(config: Config, data: np.array):
     result = torch.Tensor().to(device)
 
     model.eval()
-    hidden_predict = None
+
     for _data in test_loader:
         data_x = _data[0].to(device)
         pred_x = model(data_x)
 
         cur_pred = torch.squeeze(pred_x, dim=0)
-        result = torch.cat((result, cur_pred), dim=0)
+        prob = log_softmax(cur_pred, dim=0)
+        arg_max = np.argmax(prob.squeeze().detach().cpu().numpy())
+        print(f"{pred_x:}{prob:}{arg_max:}")
+        #result = torch.multinomial(prob, 5)
 
-    print(f"result: {result.detach().cpu().numpy()}")
+    print(f"result: {result}")

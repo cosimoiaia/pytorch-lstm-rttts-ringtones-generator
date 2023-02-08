@@ -23,9 +23,9 @@ class Config:
     train_data_rate = 0.85
     valid_data_rate = 0.15
 
-    batch_size = 32
+    batch_size = 64
     learning_rate = 0.001
-    epoch = 8
+    epoch = 1
 
     random_seed = 42
 
@@ -36,6 +36,7 @@ class Config:
     model_name = "model_" + name + ".pth"
 
     train_data_path = "./data/ringtones_cleaned.txt"
+    #train_data_path = "./data/one.txt"
     model_save_path = "./checkpoint/"
     log_save_path = "./log/"
 
